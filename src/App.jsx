@@ -3,30 +3,38 @@ import { useState } from "react";
 function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [level, setLevel] = useState("beginner");
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
+
+    const userText = input;
 
     const userMessage = {
       role: "user",
-      content: input,
+      content: userText,
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
 
     try {
-      const response = await fetch(
-        "/api/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: input,
-          }),
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          message: userText,
+          level,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("API Error: " + response.status);
+      }
 
       const data = await response.json();
 
@@ -38,49 +46,89 @@ function App() {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          content: "Something went wrong. Try again.",
+        },
+      ]);
     }
 
-    setInput("");
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-emerald-950 text-white p-6">
+    <div className="min-h-screen font-[Inter] bg-[var(--bg-dark)] text-[var(--text-dark)] p-6">
+      
+      {/* Header */}
       <h1 className="text-3xl font-bold mb-6">
         STEMFlow
       </h1>
 
+      {/* Difficulty Selector */}
+      <div className="flex gap-2 mb-4">
+        {["beginner", "intermediate", "advanced"].map((lvl) => (
+          <button
+            key={lvl}
+            onClick={() => setLevel(lvl)}
+            className={`px-4 py-2 rounded-[var(--radius)] text-sm transition ${
+              level === lvl
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
+            }`}
+          >
+            {lvl}
+          </button>
+        ))}
+      </div>
+
+      {/* Messages */}
       <div className="space-y-4 mb-6">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`p-4 rounded-xl max-w-[70%]
-            ${
+            className={`px-4 py-3 rounded-[var(--radius)] max-w-[70%] text-sm leading-relaxed ${
               msg.role === "user"
-                ? "bg-blue-600 ml-auto"
-                : "bg-gray-800"
+                ? "bg-[var(--primary)] text-white ml-auto"
+                : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
             }`}
           >
             {msg.content}
           </div>
         ))}
+
+        {/* Loading bubble */}
+        {loading && (
+          <div className="bg-[var(--card-dark)] text-[var(--text-dark)] p-4 rounded-[var(--radius)] w-fit animate-pulse border border-[var(--border-dark)]">
+            AI is thinking...
+          </div>
+        )}
       </div>
 
+      {/* Input */}
       <div className="flex gap-4">
         <input
           type="text"
-          placeholder="Ask something..."
-          className="flex-1 p-3 rounded-lg text-black"
+          placeholder="Ask anything about STEM..."
           value={input}
-          onChange={(e) =>
-            setInput(e.target.value)
-          }
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") sendMessage();
+          }}
+          className="flex-1 px-4 py-3 rounded-[var(--radius)] bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)] outline-none focus:border-[var(--primary)]"
         />
 
         <button
           onClick={sendMessage}
-          className="bg-blue-600 px-6 rounded-lg"
+          disabled={loading}
+          className={`px-6 py-3 rounded-[var(--radius)] font-medium transition ${
+            loading
+              ? "bg-gray-600 cursor-not-allowed"
+              : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
+          }`}
         >
-          Send
+          {loading ? "Thinking..." : "Send"}
         </button>
       </div>
     </div>

@@ -1,1 +1,29 @@
+:root {
+  /* Fonts */
+  --font-main: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Light theme */
+  --bg-light: #f7f8fa;
+  --card-light: #ffffff;
+  --text-light: #111827;
+  --muted-light: #6b7280;
+
+  /* Dark theme */
+  --bg-dark: #0b0f17;
+  --card-dark: #121826;
+  --text-dark: #e5e7eb;
+  --muted-dark: #9ca3af;
+
+  /* Accent */
+  --primary: #4f7cff;
+  --primary-hover: #3b66ff;
+
+  /* Borders */
+  --border-light: #e5e7eb;
+  --border-dark: #1f2937;
+
+  /* Radius */
+  --radius: 14px;
+}
+
 @import "tailwindcss"
