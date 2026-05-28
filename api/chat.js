@@ -13,12 +13,10 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { message, level, mode } = req.body;
+    const { message, lesson, mode } = req.body;
 
     // fallback mode
-    const selectedMode = mode || "learn";
-
-    const systemPrompt = prompts[selectedMode] || prompts.learn;
+    // const selectedMode = mode || "learn";
 
     const completion = await client.chat.completions.create({
       model: "deepseek/deepseek-chat-v3-0324",
@@ -26,37 +24,43 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: systemPrompt,
+          content:
+            mode === "quiz"
+              ? `
+You are a strict quiz generator for STEM education.
+
+Rules:
+- Generate ONLY questions (no explanations first)
+- Mix MCQs + short answers
+- Base everything strictly on provided lesson
+- Keep difficulty appropriate to student's level
+- After quiz, say: "Submit your answers when ready"
+`
+              : mode === "exam"
+                ? `
+You are an exam generator for STEM education.
+
+Rules:
+- Create a structured exam (10–15 questions)
+- Mix easy, medium, hard questions
+- Include MCQs, short answers, and one or two long questions
+- Do NOT provide answers yet
+- End with: "Submit your answers for grading"
+`
+                : `
+You are a world-class STEM tutor.
+
+Rules:
+- Explain clearly and structured
+- Adapt to student level naturally (beginner/intermediate/advanced)
+- Use markdown formatting
+- Avoid childish tone
+- Be academically respectful and engaging
+`,
         },
         {
           role: "user",
-          content: `
-Student Level: ${level || "beginner"}
-
-Level Rules:
-
-If level is BEGINNER:
-- Use simple but academically respectful language
-- Avoid childish analogies
-- Explain concepts clearly and patiently
-- Assume a high-school or early college student
-- Prioritize intuition before technical depth
-
-If level is INTERMEDIATE:
-- Use proper STEM terminology
-- Include formulas when helpful
-- Explain reasoning step-by-step
-- Balance simplicity with technical depth
-
-If level is ADVANCED:
-- Use technical depth
-- Include derivations and deeper theory
-- Assume stronger background knowledge
-- Focus on analytical understanding
-
-Student Request:
-${message}
-`,
+          content: lesson || message,
         },
       ],
     });

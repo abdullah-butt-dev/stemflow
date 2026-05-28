@@ -7,6 +7,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [level, setLevel] = useState("beginner");
+  const [lastLesson, setLastLesson] = useState("");
   const [mode, setMode] = useState("learn");
 
   const sendMessage = async () => {
@@ -48,6 +49,8 @@ function App() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      setLastLesson(data.reply);
     } catch (error) {
       console.error(error);
       setMessages((prev) => [
@@ -57,6 +60,40 @@ function App() {
           content: "Something went wrong. Try again.",
         },
       ]);
+    }
+
+    setLoading(false);
+  };
+
+  const sendQuiz = async (type) => {
+    if (loading) return;
+    if (!lastLesson) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Generate a ${type} from this lesson`,
+          lesson: lastLesson,
+          mode: type,
+        }),
+      });
+
+      const data = await response.json();
+
+      const aiMessage = {
+        role: "ai",
+        content: data.reply,
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      console.error(err);
     }
 
     setLoading(false);
@@ -127,6 +164,24 @@ function App() {
           </div>
         )}
       </div>
+
+      {lastLesson && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => sendQuiz("quiz")}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg"
+          >
+            Generate Quiz
+          </button>
+
+          <button
+            onClick={() => sendQuiz("exam")}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+          >
+            Generate Exam
+          </button>
+        </div>
+      )}
 
       {/* Input */}
       <div className="flex gap-4">
