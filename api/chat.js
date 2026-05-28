@@ -36,11 +36,11 @@ Student Level: ${level || "beginner"}
 Level Rules:
 
 If level is BEGINNER:
-- Use very simple language
-- Explain slowly
-- Use analogies and simple examples
-- Avoid complex jargon
-- Focus on intuition first
+- Use simple but academically respectful language
+- Avoid childish analogies
+- Explain concepts clearly and patiently
+- Assume a high-school or early college student
+- Prioritize intuition before technical depth
 
 If level is INTERMEDIATE:
 - Use proper STEM terminology

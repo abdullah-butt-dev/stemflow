@@ -1,4 +1,6 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function App() {
   const [input, setInput] = useState("");
@@ -75,8 +77,8 @@ function App() {
             key={lvl}
             onClick={() => setLevel(lvl)}
             className={`px-4 py-2 rounded-[var(--radius)] text-sm transition ${level === lvl
-                ? "bg-[var(--primary)] text-white"
-                : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
+              ? "bg-[var(--primary)] text-white"
+              : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
               }`}
           >
             {lvl}
@@ -90,8 +92,8 @@ function App() {
             key={m}
             onClick={() => setMode(m)}
             className={`px-4 py-2 rounded-[var(--radius)] text-sm ${mode === m
-                ? "bg-[var(--primary)] text-white"
-                : "bg-[var(--card-dark)] text-[var(--text-dark)]"
+              ? "bg-[var(--primary)] text-white"
+              : "bg-[var(--card-dark)] text-[var(--text-dark)]"
               }`}
           >
             {m.toUpperCase()}
@@ -104,12 +106,17 @@ function App() {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`px-4 py-3 rounded-[var(--radius)] max-w-[70%] text-sm leading-relaxed ${msg.role === "user"
+            className={`px-5 py-4 rounded-[var(--radius)] max-w-[75%]
+                leading-7 text-[15px] whitespace-pre-wrap
+                shadow-sm
+                ${msg.role === "user"
                 ? "bg-[var(--primary)] text-white ml-auto"
                 : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
               }`}
           >
-            {msg.content}
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {msg.content}
+            </ReactMarkdown>
           </div>
         ))}
 
@@ -138,8 +145,8 @@ function App() {
           onClick={sendMessage}
           disabled={loading}
           className={`px-6 py-3 rounded-[var(--radius)] font-medium transition ${loading
-              ? "bg-gray-600 cursor-not-allowed"
-              : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
             }`}
         >
           {loading ? "Thinking..." : "Send"}
