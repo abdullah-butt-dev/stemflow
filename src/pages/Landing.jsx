@@ -9,6 +9,8 @@ import {
   Layout,
   MessageSquare
 } from "lucide-react";
+import { Link } from "react-router-dom";
+
 
 export default function Landing() {
   return (
@@ -24,12 +26,13 @@ export default function Landing() {
       <div className="relative z-10 flex justify-between items-center px-8 py-6">
         <h1 className="text-xl font-semibold tracking-wide">STEMFlow</h1>
 
-        <a
-          href="/chat"
-          className="px-5 py-2 rounded-xl bg-white text-black hover:scale-105 transition"
+
+        <Link
+          to="/chat"
+          className="px-5 py-2 rounded-xl bg-white text-black hover:scale-105 transition inline-block"
         >
           Open App
-        </a>
+        </Link>
       </div>
 
       {/* HERO */}
