@@ -5,6 +5,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [level, setLevel] = useState("beginner");
+  const [mode, setMode] = useState("learn");
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -29,6 +30,7 @@ function App() {
         body: JSON.stringify({
           message: userText,
           level,
+          mode
         }),
       });
 
@@ -60,7 +62,7 @@ function App() {
 
   return (
     <div className="min-h-screen font-[Inter] bg-[var(--bg-dark)] text-[var(--text-dark)] p-6">
-      
+
       {/* Header */}
       <h1 className="text-3xl font-bold mb-6">
         STEMFlow
@@ -72,13 +74,27 @@ function App() {
           <button
             key={lvl}
             onClick={() => setLevel(lvl)}
-            className={`px-4 py-2 rounded-[var(--radius)] text-sm transition ${
-              level === lvl
+            className={`px-4 py-2 rounded-[var(--radius)] text-sm transition ${level === lvl
                 ? "bg-[var(--primary)] text-white"
                 : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
-            }`}
+              }`}
           >
             {lvl}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {["learn", "quiz", "exam"].map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`px-4 py-2 rounded-[var(--radius)] text-sm ${mode === m
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--card-dark)] text-[var(--text-dark)]"
+              }`}
+          >
+            {m.toUpperCase()}
           </button>
         ))}
       </div>
@@ -88,11 +104,10 @@ function App() {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`px-4 py-3 rounded-[var(--radius)] max-w-[70%] text-sm leading-relaxed ${
-              msg.role === "user"
+            className={`px-4 py-3 rounded-[var(--radius)] max-w-[70%] text-sm leading-relaxed ${msg.role === "user"
                 ? "bg-[var(--primary)] text-white ml-auto"
                 : "bg-[var(--card-dark)] text-[var(--text-dark)] border border-[var(--border-dark)]"
-            }`}
+              }`}
           >
             {msg.content}
           </div>
@@ -122,11 +137,10 @@ function App() {
         <button
           onClick={sendMessage}
           disabled={loading}
-          className={`px-6 py-3 rounded-[var(--radius)] font-medium transition ${
-            loading
+          className={`px-6 py-3 rounded-[var(--radius)] font-medium transition ${loading
               ? "bg-gray-600 cursor-not-allowed"
               : "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
-          }`}
+            }`}
         >
           {loading ? "Thinking..." : "Send"}
         </button>
