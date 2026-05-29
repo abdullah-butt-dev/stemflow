@@ -3,6 +3,7 @@ import Landing from "./pages/Landing";
 import Chat from "./pages/Chat";
 
 export default function App() {
+
   return (
     <BrowserRouter>
       <Routes>
