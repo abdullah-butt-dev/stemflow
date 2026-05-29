@@ -1,274 +1,347 @@
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import {
+  Menu,
+  X,
+  RefreshCw,
+  ClipboardList,
+  FileText
+} from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Chat() {
-    const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [level, setLevel] = useState("beginner");
-    const [lastLesson, setLastLesson] = useState("");
-    const [mode, setMode] = useState("learn");
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-    const chatRef = useRef(null);
+function Chat() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        chatRef.current?.scrollTo({
-            top: chatRef.current.scrollHeight,
-            behavior: "smooth",
-        });
-    }, [messages, loading]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const [lastLesson, setLastLesson] = useState("");
 
-    const streamText = async (text, setMessages, index) => {
-        let output = "";
+  const [view, setView] = useState("chat");
 
-        for (let i = 0; i < text.length; i++) {
-            output += text[i];
+  const chatRef = useRef(null);
 
-            setMessages((prev) => {
-                const updated = [...prev];
-                updated[index] = {
-                    ...updated[index],
-                    content: output,
-                };
-                return updated;
-            });
+  useEffect(() => {
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth"
+    });
+  }, [messages, loading]);
 
-            await sleep(8); // typing speed
-        }
+  const sendMessage = async (customMessage) => {
+    const finalMessage = customMessage || input;
+
+    if (!finalMessage.trim() || loading) return;
+
+    const userMessage = {
+      role: "user",
+      content: finalMessage
     };
 
-    const sendMessage = async () => {
-        if (!input.trim() || loading) return;
+    setMessages((prev) => [...prev, userMessage]);
 
-        const userText = input;
+    setInput("");
 
-        const userMessage = {
-            role: "user",
-            content: userText,
-        };
+    setLoading(true);
 
-        setMessages((prev) => [...prev, userMessage]);
-        setInput("");
-        setLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: finalMessage
+        })
+      });
 
-        try {
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    message: userText,
-                    level,
-                    mode
-                }),
-            });
+      const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error("API Error: " + response.status);
-            }
+      const aiMessage = {
+        role: "ai",
+        content: data.reply
+      };
 
-            const data = await response.json();
+      setMessages((prev) => [...prev, aiMessage]);
 
-            const aiMessage = {
-                role: "ai",
-                content: data.reply,
-            };
+      setLastLesson(data.reply);
 
-            setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error(error);
+    }
 
-            setLastLesson(data.reply);
-        } catch (error) {
-            console.error(error);
-            setMessages((prev) => [
-                ...prev,
-                {
-                    role: "ai",
-                    content: "Something went wrong. Try again.",
-                },
-            ]);
-        }
+    setLoading(false);
+  };
 
-        setLoading(false);
-    };
+  const generateQuiz = async () => {
+    setView("quiz");
+  };
 
-    const sendQuiz = async (type) => {
-        if (loading) return;
-        if (!lastLesson) return;
+  const generateExam = async () => {
+    setView("exam");
+  };
 
-        setLoading(true);
+  return (
+    <div className="h-screen bg-[#0B0F19] text-white flex overflow-hidden">
 
-        try {
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    message: `Generate a ${type} from this lesson`,
-                    lesson: lastLesson,
-                    mode: type,
-                }),
-            });
+      {/* SIDEBAR */}
 
-            const data = await response.json();
-
-            // const aiMessage = {
-            //     role: "ai",
-            //     content: data.reply,
-            // };
-
-            const newMsgIndex = messages.length + 1;
-
-            setMessages((prev) => [
-                ...prev,
-                { role: "ai", content: "" },
-            ]);
-
-            await streamText(data.reply, setMessages, newMsgIndex);
-        } catch (err) {
-            console.error(err);
-        }
-
-        setLoading(false);
-    };
-
-    return (
-        <div className="h-screen flex bg-[var(--bg)] text-[var(--text)]">
-
-            {/* LEFT SIDEBAR */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
             <motion.div
-                animate={{ width: sidebarOpen ? 260 : 70 }}
-                className="h-full border-r border-white/10 bg-black/30 backdrop-blur-xl"
+              className="fixed inset-0 bg-black/60 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 24
+              }}
+              className="fixed left-0 top-0 h-full w-[280px]
+              bg-[#111827] z-50 border-r border-white/10 p-5"
             >
-                <div className="p-4 flex justify-between items-center">
-                    <span className="text-white font-semibold">
-                        {sidebarOpen ? "STEMFlow" : "SF"}
-                    </span>
 
-                    <button
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="text-white/60 hover:text-white"
-                    >
-                        ☰
-                    </button>
-                </div>
+              <div className="flex items-center justify-between mb-8">
+
+                <h2 className="text-xl font-semibold">
+                  STEMFlow
+                </h2>
+
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <X />
+                </button>
+
+              </div>
+
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setView("chat");
+                }}
+                className="w-full bg-purple-600 hover:bg-purple-700
+                transition rounded-xl py-3"
+              >
+                New Chat
+              </button>
+
             </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-            {/* MAIN CHAT AREA */}
-            <div className="flex-1 flex flex-col">
+      {/* MAIN */}
 
-                {/* TOP BAR */}
-                <div className="border-b border-[var(--border)] p-4 flex justify-between items-center">
-                    <div className="font-medium">AI Tutor</div>
+      <div className="flex-1 flex flex-col">
 
-                    <div className="flex gap-2">
-                        {["learn", "quiz", "exam"].map((m) => (
-                            <button
-                                key={m}
-                                onClick={() => setMode(m)}
-                                className={`px-3 py-1 rounded-[var(--radius)] text-sm hover-lift ${mode === m
-                                    ? "bg-[var(--primary)] text-white"
-                                    : "bg-[var(--card)] text-[var(--muted)]"
-                                    }`}
-                            >
-                                {m}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+        {/* TOPBAR */}
 
-                {/* MESSAGES */}
+        <div className="h-[70px] border-b border-white/10
+        flex items-center justify-between px-4">
 
-                <div ref={chatRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex items-center gap-3">
 
-                    <AnimatePresence initial={false}>
-                        {messages.map((msg, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                            >
-                                <div
-                                    className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap
-            ${msg.role === "user"
-                                            ? "bg-purple-600 text-white"
-                                            : "bg-white/5 border border-white/10 text-white"
-                                        }`}
-                                >
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                </div>
-                            </motion.div>
-                        ))}
+            <button
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu />
+            </button>
 
-                        {/* Loading as animated message bubble */}
-                        {loading && (
-                            <motion.div
-                                key="loading"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="flex justify-start"
-                            >
-                                <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 text-sm animate-pulse">
-                                    AI is thinking...
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+            <h1 className="text-lg font-semibold">
+              STEMFlow
+            </h1>
 
-                </div>
+          </div>
 
+        </div>
 
-                {/* QUIZ BUTTONS */}
-                {lastLesson && (
-                    <div className="px-6 pb-2 flex gap-2">
-                        <button
-                            onClick={() => sendQuiz("quiz")}
-                            className="px-3 py-2 rounded-[var(--radius)] bg-green-600 hover:opacity-90 hover-lift text-white text-sm"
-                        >
-                            Generate Quiz
-                        </button>
+        {/* CHAT VIEW */}
 
-                        <button
-                            onClick={() => sendQuiz("exam")}
-                            className="px-3 py-2 rounded-[var(--radius)] bg-purple-600 hover:opacity-90 hover-lift text-white text-sm"
-                        >
+        {view === "chat" && (
+          <>
+            <div
+              ref={chatRef}
+              className="flex-1 overflow-y-auto px-4 md:px-10 py-8"
+            >
+
+              <div className="max-w-4xl mx-auto space-y-10">
+
+                {messages.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+
+                    {msg.role === "user" ? (
+
+                      <div className="flex justify-end">
+
+                        <div className="bg-purple-600 px-5 py-3
+                        rounded-2xl max-w-[80%] text-sm">
+                          {msg.content}
+                        </div>
+
+                      </div>
+
+                    ) : (
+
+                      <div className="w-full">
+
+                        <div className="prose prose-invert max-w-none
+                        prose-headings:text-white
+                        prose-p:text-gray-300
+                        prose-strong:text-white
+                        prose-code:text-purple-300
+                        prose-pre:bg-[#111827]
+                        prose-pre:border prose-pre:border-white/10">
+
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+
+                        </div>
+
+                        {/* ACTIONS */}
+
+                        <div className="flex flex-wrap gap-3 mt-6">
+
+                          <button
+                            onClick={() => sendMessage("Explain this differently")}
+                            className="flex items-center gap-2
+                            px-4 py-2 rounded-xl bg-white/5
+                            hover:bg-white/10 transition"
+                          >
+                            <RefreshCw size={16} />
+                            Regenerate
+                          </button>
+
+                          <button
+                            onClick={generateQuiz}
+                            className="flex items-center gap-2
+                            px-4 py-2 rounded-xl bg-white/5
+                            hover:bg-white/10 transition"
+                          >
+                            <ClipboardList size={16} />
+                            Quiz Me
+                          </button>
+
+                          <button
+                            onClick={generateExam}
+                            className="flex items-center gap-2
+                            px-4 py-2 rounded-xl bg-white/5
+                            hover:bg-white/10 transition"
+                          >
+                            <FileText size={16} />
                             Generate Exam
-                        </button>
-                    </div>
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </motion.div>
+                ))}
+
+                {loading && (
+                  <div className="animate-pulse text-gray-400">
+                    AI is thinking...
+                  </div>
                 )}
 
-                {/* INPUT AREA */}
-                <div className="p-4 border-t border-white/10 flex gap-3 bg-black/20 backdrop-blur-xl">
+              </div>
 
-                    <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                        placeholder="Ask anything about STEM..."
-                        className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-purple-500 transition"
-                    />
-
-                    <button
-                        onClick={sendMessage}
-                        disabled={loading}
-                        className="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition disabled:opacity-50"
-                    >
-                        Send
-                    </button>
-                </div>
             </div>
-        </div>
-    );
+
+            {/* INPUT */}
+
+            <div className="border-t border-white/10 p-4">
+
+              <div className="max-w-4xl mx-auto flex gap-3">
+
+                <textarea
+                  rows={1}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask anything about STEM..."
+                  className="flex-1 bg-[#111827]
+                  border border-white/10 rounded-2xl
+                  px-5 py-4 outline-none resize-none"
+                />
+
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={loading}
+                  className="bg-purple-600 hover:bg-purple-700
+                  transition px-6 rounded-2xl"
+                >
+                  Send
+                </button>
+
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {/* QUIZ VIEW */}
+
+        {view === "quiz" && (
+          <div className="flex-1 p-6">
+
+            <button
+              onClick={() => setView("chat")}
+              className="mb-6 text-sm text-gray-400"
+            >
+              ← Back to Chat
+            </button>
+
+            <h2 className="text-3xl font-bold mb-6">
+              Quiz Mode
+            </h2>
+
+          </div>
+        )}
+
+        {/* EXAM VIEW */}
+
+        {view === "exam" && (
+          <div className="flex-1 p-6">
+
+            <button
+              onClick={() => setView("chat")}
+              className="mb-6 text-sm text-gray-400"
+            >
+              ← Back to Chat
+            </button>
+
+            <h2 className="text-3xl font-bold mb-6">
+              Exam Mode
+            </h2>
+
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  );
 }
+
+export default Chat;

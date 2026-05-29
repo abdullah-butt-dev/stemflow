@@ -55,12 +55,12 @@ export default function Landing() {
           </p>
 
           <div className="flex gap-4 mt-8">
-            <a
-              href="/chat"
+            <Link
+              to="/chat"
               className="px-6 py-3 bg-purple-600 rounded-xl hover:bg-purple-500 transition flex items-center gap-2"
             >
               Start Learning <ArrowRight size={18} />
-            </a>
+            </Link>
 
             <a
               href="#features"
