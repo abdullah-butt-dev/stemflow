@@ -126,11 +126,61 @@ function Chat() {
     };
 
     const generateQuiz = async () => {
-        setView("quiz");
+        if (!lastLesson || loading) return;
+
+        setLoading(true);
+
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: "Generate a quiz from this lesson",
+                    lesson: lastLesson,
+                    mode: "quiz",
+                }),
+            });
+
+            const data = await res.json();
+
+            setQuizData(data.reply);
+            setView("quiz");
+        } catch (err) {
+            console.error(err);
+        }
+
+        setLoading(false);
     };
 
     const generateExam = async () => {
-        setView("exam");
+        if (!lastLesson || loading) return;
+
+        setLoading(true);
+
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: "Generate an exam from this lesson",
+                    lesson: lastLesson,
+                    mode: "exam",
+                }),
+            });
+
+            const data = await res.json();
+
+            setQuizData(data.reply);
+            setView("exam");
+        } catch (err) {
+            console.error(err);
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -347,13 +397,68 @@ ${lastLesson}
 
                 {view === "quiz" && quizData && (
                     <div className="flex-1 overflow-y-auto p-6">
+                        <div className="max-w-4xl mx-auto space-y-6">
 
-                        <button
-                            onClick={() => setView("chat")}
-                            className="mb-6 text-sm text-white/60 hover:text-white"
-                        >
-                            ← Back to Chat
-                        </button>
+                            <h1 className="text-3xl font-bold">
+                                {quizData.title}
+                            </h1>
+
+                            {quizData.questions.map((q, index) => (
+                                <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10">
+
+                                    <p className="mb-3 font-medium">
+                                        {index + 1}. {q.question}
+                                    </p>
+
+                                    {q.type === "mcq" && q.options?.map((opt, i) => (
+                                        <label key={i} className="block p-2 hover:bg-white/10 rounded">
+                                            <input
+                                                type="radio"
+                                                name={`q-${index}`}
+                                                onChange={() =>
+                                                    setAnswers(prev => ({
+                                                        ...prev,
+                                                        [index]: opt
+                                                    }))
+                                                }
+                                            />
+                                            <span className="ml-2">{opt}</span>
+                                        </label>
+                                    ))}
+
+                                    {q.type !== "mcq" && (
+                                        <input
+                                            className="w-full mt-3 p-3 bg-black/30 rounded"
+                                            onChange={(e) =>
+                                                setAnswers(prev => ({
+                                                    ...prev,
+                                                    [index]: e.target.value
+                                                }))
+                                            }
+                                        />
+                                    )}
+
+                                </div>
+                            ))}
+
+                            <button
+                                onClick={gradeQuiz}
+                                className="px-6 py-3 bg-purple-600 rounded-xl"
+                            >
+                                Submit Quiz
+                            </button>
+
+                            {score && (
+                                <p className="text-xl font-bold">Score: {score}</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* EXAM VIEW */}
+
+                {view === "exam" && quizData && (
+                    <div className="flex-1 overflow-y-auto p-6">
 
                         <div className="max-w-4xl mx-auto space-y-6">
 
@@ -362,104 +467,51 @@ ${lastLesson}
                             </h1>
 
                             {quizData.questions.map((q, index) => (
-                                <div
-                                    key={index}
-                                    className="
-            bg-white/5
-            border border-white/10
-            rounded-2xl
-            p-6
-          "
-                                >
-                                    <h2 className="font-medium mb-4">
+                                <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10">
+
+                                    <p className="mb-3 font-medium">
                                         {index + 1}. {q.question}
-                                    </h2>
+                                    </p>
 
-                                    {q.type === "mcq" && (
-                                        <div className="space-y-3">
-                                            {q.options.map((option, i) => (
-                                                <label
-                                                    key={i}
-                                                    className="
-                    flex items-center gap-3
-                    p-3 rounded-xl
-                    hover:bg-white/5
-                    transition cursor-pointer
-                  "
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name={`q-${index}`}
-                                                        value={option}
-                                                        onChange={() =>
-                                                            setAnswers((prev) => ({
-                                                                ...prev,
-                                                                [index]: option,
-                                                            }))
-                                                        }
-                                                    />
-
-                                                    {option}
-                                                </label>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {(q.type === "short" ||
-                                        q.type === "long") && (
-                                            <textarea
-                                                rows={q.type === "long" ? 6 : 3}
-                                                className="
-                w-full mt-4 p-4
-                rounded-xl
-                bg-black/20
-                border border-white/10
-                outline-none
-              "
-                                                onChange={(e) =>
-                                                    setAnswers((prev) => ({
+                                    {q.type === "mcq" && q.options?.map((opt, i) => (
+                                        <label key={i} className="block p-2 hover:bg-white/10 rounded">
+                                            <input
+                                                type="radio"
+                                                name={`q-${index}`}
+                                                onChange={() =>
+                                                    setAnswers(prev => ({
                                                         ...prev,
-                                                        [index]: e.target.value,
+                                                        [index]: opt
                                                     }))
                                                 }
                                             />
-                                        )}
+                                            <span className="ml-2">{opt}</span>
+                                        </label>
+                                    ))}
+
+                                    {q.type !== "mcq" && (
+                                        <textarea
+                                            className="w-full mt-3 p-3 bg-black/30 rounded"
+                                            onChange={(e) =>
+                                                setAnswers(prev => ({
+                                                    ...prev,
+                                                    [index]: e.target.value
+                                                }))
+                                            }
+                                        />
+                                    )}
+
                                 </div>
                             ))}
 
                             <button
                                 onClick={gradeQuiz}
-                                className="
-          px-6 py-3 rounded-xl
-          bg-purple-600
-          hover:bg-purple-500
-          transition
-        "
+                                className="px-6 py-3 bg-green-600 rounded-xl"
                             >
-                                Submit
+                                Submit Exam
                             </button>
 
-                            {score && (
-                                <div className="text-xl font-semibold">
-                                    Score: {score}
-                                </div>
-                            )}
                         </div>
-                    </div>
-                )}
-
-                {/* EXAM VIEW */}
-
-                {view === "exam" && (
-                    <div className="flex-1 p-6">
-                        <button
-                            onClick={() => setView("chat")}
-                            className="mb-6 text-sm text-gray-400"
-                        >
-                            ← Back to Chat
-                        </button>
-
-                        <h2 className="text-3xl font-bold mb-6">Exam Mode</h2>
                     </div>
                 )}
             </div>

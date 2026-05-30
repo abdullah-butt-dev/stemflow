@@ -38,32 +38,41 @@ export default async function handler(req, res) {
     const raw =
       completion?.choices?.[0]?.message?.content;
 
-    // Quiz & Exam return JSON later
+    let parsed = raw;
+
     if (mode === "quiz" || mode === "exam") {
       try {
-        const parsed = JSON.parse(raw);
-
-        return res.status(200).json({
-          reply: parsed,
-        });
-      } catch (err) {
-        console.error("JSON Parse Error:", err);
-
-        return res.status(500).json({
-          error: "Invalid AI JSON response",
-        });
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        console.error("JSON Parse Error", e);
+        parsed = {
+          title: "Error",
+          questions: [],
+        };
       }
     }
 
     return res.status(200).json({
-      reply: raw || "No response from AI",
+      reply: parsed,
     });
-
-  } catch (error) {
-    console.error("AI Error:", error);
+  } catch (err) {
+    console.error("JSON Parse Error:", err);
 
     return res.status(500).json({
-      error: "AI request failed",
+      error: "Invalid AI JSON response",
     });
   }
+}
+
+return res.status(200).json({
+  reply: raw || "No response from AI",
+});
+
+  } catch (error) {
+  console.error("AI Error:", error);
+
+  return res.status(500).json({
+    error: "AI request failed",
+  });
+}
 }
