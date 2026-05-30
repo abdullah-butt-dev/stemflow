@@ -6,23 +6,45 @@ export const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 });
 
+// helper: extract JSON safely
+function extractJSON(text) {
+  try {
+    // remove ```json blocks if present
+    const cleaned = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // try direct parse first
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // fallback: extract first JSON object from text
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch (err) {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   try {
-    // Method check
     if (req.method !== "POST") {
-      return res.status(405).json({
-        error: "Method not allowed",
-      });
+      return res.status(405).json({ error: "Method not allowed" });
     }
 
     const { message, lesson, mode = "learn" } = req.body;
 
-    // Select prompt
     const systemPrompt = prompts[mode] || prompts.learn;
 
-    // Call model
     const completion = await client.chat.completions.create({
       model: "deepseek/deepseek-chat-v3-0324",
+      temperature: 0.7,
+
       messages: [
         {
           role: "system",
@@ -37,35 +59,35 @@ export default async function handler(req, res) {
 
     const raw = completion?.choices?.[0]?.message?.content;
 
-    if (!raw) {
-      return res.status(500).json({
-        error: "Empty response from model",
+    // default response
+    let reply = raw;
+
+    // ONLY parse for quiz/exam
+    if (mode === "quiz" || mode === "exam") {
+      const parsed = extractJSON(raw);
+
+      if (!parsed) {
+        return res.status(200).json({
+          reply: {
+            title: "Generation failed",
+            questions: [],
+            error: true,
+          },
+        });
+      }
+
+      return res.status(200).json({
+        reply: parsed,
       });
     }
 
-    // Default reply
-    let reply = raw;
-
-    // Parse JSON for quiz/exam modes
-    if (mode === "quiz" || mode === "exam") {
-      try {
-        reply = JSON.parse(raw);
-      } catch (err) {
-        console.error("JSON Parse Error:", err);
-
-        reply = {
-          title: "Failed to generate quiz/exam",
-          questions: [],
-        };
-      }
-    }
-
+    // normal learn mode
     return res.status(200).json({
       reply,
     });
 
-  } catch (error) {
-    console.error("AI Error:", error);
+  } catch (err) {
+    console.error("AI Error:", err);
 
     return res.status(500).json({
       error: "AI request failed",
