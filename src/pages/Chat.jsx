@@ -145,10 +145,16 @@ function Chat() {
 
             const data = await res.json();
 
+            if (!data.reply || !data.reply.questions) {
+                throw new Error("Invalid quiz format");
+            }
+
             setQuizData(data.reply);
             setView("quiz");
+
         } catch (err) {
             console.error(err);
+            alert("Failed to generate quiz");
         }
 
         setLoading(false);
@@ -174,13 +180,37 @@ function Chat() {
 
             const data = await res.json();
 
+            if (!data.reply || !data.reply.questions) {
+                throw new Error("Invalid exam format");
+            }
+
             setQuizData(data.reply);
             setView("exam");
+
         } catch (err) {
             console.error(err);
+            alert("Failed to generate exam");
         }
 
         setLoading(false);
+    };
+
+    const gradeExam = () => {
+        let correct = 0;
+
+        quizData.questions.forEach((q, index) => {
+            const userAnswer = answers[index];
+
+            if (!userAnswer) return;
+
+            if (q.answer &&
+                userAnswer.toLowerCase().trim() === q.answer.toLowerCase().trim()
+            ) {
+                correct++;
+            }
+        });
+
+        setScore(`${correct}/${quizData.questions.length}`);
     };
 
     return (
@@ -410,8 +440,11 @@ ${lastLesson}
                                         {index + 1}. {q.question}
                                     </p>
 
-                                    {q.type === "mcq" && q.options?.map((opt, i) => (
-                                        <label key={i} className="block p-2 hover:bg-white/10 rounded">
+                                    {q.type === "mcq" && q.options?.map((opt, index) => (
+                                        <label
+                                            className={`block p-2 rounded cursor-pointer
+    ${answers[index] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
+                                        >
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
@@ -473,8 +506,11 @@ ${lastLesson}
                                         {index + 1}. {q.question}
                                     </p>
 
-                                    {q.type === "mcq" && q.options?.map((opt, i) => (
-                                        <label key={i} className="block p-2 hover:bg-white/10 rounded">
+                                    {q.type === "mcq" && q.options?.map((opt, index) => (
+                                        <label
+                                            className={`block p-2 rounded cursor-pointer
+    ${answers[index] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
+                                        >
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
@@ -505,7 +541,7 @@ ${lastLesson}
                             ))}
 
                             <button
-                                onClick={gradeQuiz}
+                                onClick={gradeExam}
                                 className="px-6 py-3 bg-green-600 rounded-xl"
                             >
                                 Submit Exam

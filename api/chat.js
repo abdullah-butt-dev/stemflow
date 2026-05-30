@@ -8,6 +8,7 @@ export const client = new OpenAI({
 
 export default async function handler(req, res) {
   try {
+    // Method check
     if (req.method !== "POST") {
       return res.status(405).json({
         error: "Method not allowed",
@@ -16,63 +17,58 @@ export default async function handler(req, res) {
 
     const { message, lesson, mode = "learn" } = req.body;
 
-    const systemPrompt =
-      prompts[mode] || prompts.learn;
+    // Select prompt
+    const systemPrompt = prompts[mode] || prompts.learn;
 
-    const completion =
-      await client.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3-0324",
+    // Call model
+    const completion = await client.chat.completions.create({
+      model: "deepseek/deepseek-chat-v3-0324",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: lesson || message,
+        },
+      ],
+    });
 
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: lesson || message,
-          },
-        ],
+    const raw = completion?.choices?.[0]?.message?.content;
+
+    if (!raw) {
+      return res.status(500).json({
+        error: "Empty response from model",
       });
+    }
 
-    const raw =
-      completion?.choices?.[0]?.message?.content;
+    // Default reply
+    let reply = raw;
 
-    let parsed = raw;
-
+    // Parse JSON for quiz/exam modes
     if (mode === "quiz" || mode === "exam") {
       try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        console.error("JSON Parse Error", e);
-        parsed = {
-          title: "Error",
+        reply = JSON.parse(raw);
+      } catch (err) {
+        console.error("JSON Parse Error:", err);
+
+        reply = {
+          title: "Failed to generate quiz/exam",
           questions: [],
         };
       }
     }
 
     return res.status(200).json({
-      reply: parsed,
+      reply,
     });
-  } catch (err) {
-    console.error("JSON Parse Error:", err);
-
-    return res.status(500).json({
-      error: "Invalid AI JSON response",
-    });
-  }
-}
-
-return res.status(200).json({
-  reply: raw || "No response from AI",
-});
 
   } catch (error) {
-  console.error("AI Error:", error);
+    console.error("AI Error:", error);
 
-  return res.status(500).json({
-    error: "AI request failed",
-  });
-}
+    return res.status(500).json({
+      error: "AI request failed",
+    });
+  }
 }
