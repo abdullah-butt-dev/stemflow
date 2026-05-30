@@ -16,6 +16,14 @@ function Chat() {
     const [lastLesson, setLastLesson] = useState("");
 
     const [view, setView] = useState("chat");
+    const [quizData, setQuizData] =
+        useState(null);
+
+    const [answers, setAnswers] =
+        useState({});
+
+    const [score, setScore] =
+        useState(null);
 
     const textareaRef = useRef(null);
 
@@ -96,6 +104,27 @@ function Chat() {
         setLoading(false);
     };
 
+    const gradeQuiz = () => {
+        let correct = 0;
+
+        quizData.questions.forEach((q, index) => {
+            const userAnswer = answers[index];
+
+            if (!userAnswer) return;
+
+            if (
+                userAnswer.toLowerCase().trim() ===
+                q.answer.toLowerCase().trim()
+            ) {
+                correct++;
+            }
+        });
+
+        setScore(
+            `${correct}/${quizData.questions.length}`
+        );
+    };
+
     const generateQuiz = async () => {
         setView("quiz");
     };
@@ -115,7 +144,7 @@ function Chat() {
                             className="fixed inset-0 bg-black/60 z-40"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            SIDE exit={{ opacity: 0 }}
+                            exit={{ opacity: 0 }}
                             onClick={() => setSidebarOpen(false)}
                         />
 
@@ -217,7 +246,11 @@ function Chat() {
                                                 <div className="flex flex-wrap gap-3 mt-6">
                                                     <button
                                                         onClick={() =>
-                                                            sendMessage("Explain this differently")
+                                                            sendMessage(`
+Explain this lesson differently:
+
+${lastLesson}
+`)
                                                         }
                                                         className="flex items-center gap-2
                             px-4 py-2 rounded-xl bg-white/5
@@ -312,16 +345,106 @@ function Chat() {
 
                 {/* QUIZ VIEW */}
 
-                {view === "quiz" && (
-                    <div className="flex-1 p-6">
+                {view === "quiz" && quizData && (
+                    <div className="flex-1 overflow-y-auto p-6">
+
                         <button
                             onClick={() => setView("chat")}
-                            className="mb-6 text-sm text-gray-400"
+                            className="mb-6 text-sm text-white/60 hover:text-white"
                         >
                             ← Back to Chat
                         </button>
 
-                        <h2 className="text-3xl font-bold mb-6">Quiz Mode</h2>
+                        <div className="max-w-4xl mx-auto space-y-6">
+
+                            <h1 className="text-3xl font-bold">
+                                {quizData.title}
+                            </h1>
+
+                            {quizData.questions.map((q, index) => (
+                                <div
+                                    key={index}
+                                    className="
+            bg-white/5
+            border border-white/10
+            rounded-2xl
+            p-6
+          "
+                                >
+                                    <h2 className="font-medium mb-4">
+                                        {index + 1}. {q.question}
+                                    </h2>
+
+                                    {q.type === "mcq" && (
+                                        <div className="space-y-3">
+                                            {q.options.map((option, i) => (
+                                                <label
+                                                    key={i}
+                                                    className="
+                    flex items-center gap-3
+                    p-3 rounded-xl
+                    hover:bg-white/5
+                    transition cursor-pointer
+                  "
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name={`q-${index}`}
+                                                        value={option}
+                                                        onChange={() =>
+                                                            setAnswers((prev) => ({
+                                                                ...prev,
+                                                                [index]: option,
+                                                            }))
+                                                        }
+                                                    />
+
+                                                    {option}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {(q.type === "short" ||
+                                        q.type === "long") && (
+                                            <textarea
+                                                rows={q.type === "long" ? 6 : 3}
+                                                className="
+                w-full mt-4 p-4
+                rounded-xl
+                bg-black/20
+                border border-white/10
+                outline-none
+              "
+                                                onChange={(e) =>
+                                                    setAnswers((prev) => ({
+                                                        ...prev,
+                                                        [index]: e.target.value,
+                                                    }))
+                                                }
+                                            />
+                                        )}
+                                </div>
+                            ))}
+
+                            <button
+                                onClick={gradeQuiz}
+                                className="
+          px-6 py-3 rounded-xl
+          bg-purple-600
+          hover:bg-purple-500
+          transition
+        "
+                            >
+                                Submit
+                            </button>
+
+                            {score && (
+                                <div className="text-xl font-semibold">
+                                    Score: {score}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
