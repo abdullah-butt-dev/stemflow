@@ -172,6 +172,12 @@ function Chat() {
                 throw new Error("Invalid quiz format");
             }
 
+
+            setAnswers({});
+            setFeedback([]);
+            setsetAnswers({});
+            setFeedback([]);
+            setScore(null); Score(null);
             setQuizData(data.reply);
             setView("quiz");
 
@@ -206,6 +212,10 @@ function Chat() {
             if (!data.reply || !data.reply.questions) {
                 throw new Error("Invalid exam format");
             }
+
+            setAnswers({});
+            setFeedback([]);
+            setScore(null);
             setExamData(data.reply);
             setView("exam");
 
@@ -315,7 +325,8 @@ function Chat() {
                                         ) : (
                                             <div className="w-full">
                                                 <div
-                                                    className="prose prose-invert max-w-none
+                                                    className="prose prose-invert max-w-none  overflow-x-auto
+ break-words prose-pre:overflow-x-auto
                         prose-headings:text-white
                         prose-p:text-gray-300
                         prose-strong:text-white
@@ -404,19 +415,17 @@ ${lastLesson}
                                     }}
                                     placeholder="Ask anything about STEM..."
                                     className="
-    flex-1
-    resize-none
-    px-4
-    py-4
-    sticky 
-    bottom-0
-    rounded-2xl
-    bg-transparent
-    outline-none
-    text-white
-    placeholder:text-white/40
-    max-h-[200px]
-  "
+flex-1
+resize-none
+px-4
+py-4
+rounded-2xl
+bg-transparent
+outline-none
+text-white
+placeholder:text-white/40
+max-h-[200px]
+"
                                 />
 
                                 <button
@@ -469,11 +478,11 @@ ${lastLesson}
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
-                                                checked={answers[index] === option}
+                                                checked={answers[index] === opt}
                                                 onChange={() =>
                                                     setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: option,
+                                                        [index]: opt,
                                                     }))
                                                 }
                                             />
@@ -535,6 +544,13 @@ ${lastLesson}
                                                 </span>
                                             </p>
 
+
+                                            {item.correctAnswer && (
+                                                <p className="text-green-400 mt-2">
+                                                    Correct Answer: {item.correctAnswer}
+                                                </p>
+                                            )}
+
                                             <p className="text-white/70 mt-2">
                                                 {item.explanation}
                                             </p>
@@ -556,7 +572,7 @@ ${lastLesson}
                             <button
                                 onClick={() => {
                                     setView("chat");
-                                    setQuizData(null);
+                                    setExamData(null);
                                     setAnswers({});
                                     setScore(null);
                                 }}
@@ -566,10 +582,10 @@ ${lastLesson}
                             </button>
 
                             <h1 className="text-3xl font-bold">
-                                {quizData.title}
+                                {examData.title}
                             </h1>
 
-                            {quizData.questions.map((q, index) => (
+                            {examData.questions.map((q, index) => (
                                 <div key={index} className="bg-white/5 p-5 rounded-2xl border border-white/10">
 
                                     <p className="mb-3 font-medium">
@@ -584,11 +600,11 @@ ${lastLesson}
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
-                                                checked={answers[index] === option}
+                                                checked={answers[index] === opt}
                                                 onChange={() =>
                                                     setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: option,
+                                                        [index]: opt,
                                                     }))
                                                 }
                                             />
@@ -617,6 +633,58 @@ ${lastLesson}
                             >
                                 Submit Exam
                             </button>
+
+
+                            {score && (
+                                <p className="text-xl font-bold">Score: {score}</p>
+                            )}
+
+                            {feedback.length > 0 && (
+                                <div className="space-y-4 mt-6">
+
+                                    <h3 className="text-xl font-semibold">
+                                        AI Feedback
+                                    </h3>
+
+                                    {feedback.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="
+        bg-white/5
+        border border-white/10
+        rounded-xl
+        p-4
+      "
+                                        >
+
+
+
+                                            <p className="font-medium">
+                                                {item.question}
+                                            </p>
+
+
+                                            <p className="mt-2">
+                                                Result:
+                                                <span className="ml-2 font-semibold">
+                                                    {item.result}
+                                                </span>
+                                            </p>
+
+
+                                            {item.correctAnswer && (
+                                                <p className="text-green-400 mt-2">
+                                                    Correct Answer: {item.correctAnswer}
+                                                </p>
+                                            )}
+
+                                            <p className="text-white/70 mt-2">
+                                                {item.explanation}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

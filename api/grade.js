@@ -24,51 +24,72 @@ export default async function handler(req, res) {
   try {
     const { assessment, answers } = req.body;
 
-    const completion =
-      await client.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3-0324",
+    const completion = await client.chat.completions.create({
+      model: "deepseek/deepseek-chat-v3-0324",
 
-        messages: [
-          {
-            role: "system",
-            content: `
+      messages: [
+        {
+          role: "system",
+          content: `
 You are an expert STEM examiner.
 
-Grade the student's answers.
+Evaluate every answer carefully.
+
+Rules:
+
+- MCQs must be graded exactly.
+- Short answers may be partially correct.
+- Long answers should be graded based on understanding.
+- Accept equivalent wording.
+- Do not require exact phrasing.
+- Award marks fairly.
 
 Return ONLY valid JSON.
 
-Format:
-
 {
-  "score":"4/5",
+  "score":"8/10",
   "feedback":[
     {
       "question":"...",
-      "result":"correct",
+      "result":"Incorrect",
+      "correctAnswer":"...",
       "explanation":"..."
     }
   ]
 }
 `,
-          },
-          {
-            role: "user",
-            content: `
+        },
+        {
+          role: "user",
+          content: `
 ASSESSMENT:
 ${JSON.stringify(assessment)}
 
 STUDENT ANSWERS:
 ${JSON.stringify(answers)}
 `,
-          },
-        ],
-      });
+        },
+      ],
+    });
 
-    const raw =
-      completion.choices[0].message.content;
+    const raw = completion.choices[0].message.content;
 
     const parsed = extractJSON(raw);
+
+    if (!parsed) {
+      return res.status(200).json({
+        reply: {
+          score: "0/0",
+          feedback: [
+            {
+              question: "Evaluation Error",
+              result: "error",
+              explanation: "AI returned invalid grading data.",
+            },
+          ],
+        },
+      });
+    }
 
     return res.status(200).json({
       reply: parsed,
