@@ -7,164 +7,226 @@ import {
   ArrowRight,
   Zap,
   Layout,
-  MessageSquare
+  MessageSquare,
+  GraduationCap,
+  ClipboardCheck,
+  BarChart3,
+  ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 export default function Landing() {
   return (
-    <div className="bg-[#0B0F19] text-white font-[Plus_Jakarta_Sans]">
+    <div className="bg-[#0B0F19] text-white font-[Plus_Jakarta_Sans] overflow-hidden">
 
-      {/* Background glow */}
-      <div className="fixed inset-0 overflow-hidden">
+      {/* BACKGROUND */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-purple-600/20 blur-[140px]" />
         <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-blue-600/20 blur-[140px]" />
       </div>
 
-      {/* NAV */}
-      <div className="relative z-10 flex justify-between items-center px-8 py-6">
-        <h1 className="text-xl font-semibold tracking-wide">STEMFlow</h1>
-
+      {/* NAVBAR */}
+      <nav className="relative z-10 flex justify-between items-center px-8 py-6">
+        <h1 className="text-xl font-semibold tracking-wide">
+          STEMFlow
+        </h1>
 
         <Link
           to="/chat"
-          className="px-5 py-2 rounded-xl bg-white text-black hover:scale-105 transition inline-block"
+          className="px-5 py-2 rounded-xl bg-white text-black hover:scale-105 transition"
         >
           Open App
         </Link>
-      </div>
+      </nav>
 
       {/* HERO */}
-      <section className="relative z-10 px-8 md:px-20 py-20 flex flex-col md:flex-row items-center justify-between gap-12">
+      <section className="relative z-10 px-8 md:px-20 py-24 flex flex-col lg:flex-row items-center justify-between gap-16">
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-2xl"
+          className="max-w-3xl"
         >
-          <h2 className="text-5xl font-bold leading-tight">
-            AI Tutor for
-            <span className="text-purple-400"> STEM Learning</span>
-          </h2>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
+            <Sparkles size={16} />
+            <span className="text-sm">
+              AI Powered STEM Learning Platform
+            </span>
+          </div>
 
-          <p className="mt-6 text-gray-300 text-lg">
-            Learn smarter, not harder. STEMFlow transforms any topic into structured lessons,
-            quizzes, and exams using AI.
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+            Learn STEM
+            <br />
+            <span className="text-purple-400">
+              Faster. Smarter.
+            </span>
+          </h1>
+
+          <p className="mt-8 text-lg text-gray-300 max-w-2xl">
+            Transform any topic into structured lessons, personalized quizzes,
+            realistic exams, and AI-powered feedback.
+            Built to help students understand concepts instead of memorizing them.
           </p>
 
-          <div className="flex gap-4 mt-8">
+          <div className="flex flex-wrap gap-4 mt-10">
             <Link
               to="/chat"
-              className="px-6 py-3 bg-purple-600 rounded-xl hover:bg-purple-500 transition flex items-center gap-2"
+              className="px-7 py-4 bg-purple-600 rounded-2xl hover:bg-purple-500 transition flex items-center gap-2"
             >
-              Start Learning <ArrowRight size={18} />
+              Start Learning
+              <ArrowRight size={18} />
             </Link>
 
             <a
               href="#features"
-              className="px-6 py-3 border border-white/20 rounded-xl hover:bg-white/10 transition"
+              className="px-7 py-4 rounded-2xl border border-white/10 hover:bg-white/5 transition"
             >
               Explore Features
             </a>
           </div>
+
+          <div className="flex flex-wrap gap-6 mt-10 text-sm text-gray-400">
+            <span>✓ AI Lessons</span>
+            <span>✓ Smart Quizzes</span>
+            <span>✓ Exam Practice</span>
+            <span>✓ AI Evaluation</span>
+          </div>
         </motion.div>
 
-        {/* illustration */}
         <motion.img
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7 }}
           src="https://illustrations.popsy.co/amber/digital-nomad.svg"
-          className="w-[400px]"
+          alt="AI Learning"
+          className="w-[450px] max-w-full"
         />
       </section>
 
-      {/* FEATURES */}
-      <section id="features" className="relative z-10 px-8 md:px-20 py-20">
+      {/* STATS */}
+      <section className="relative z-10 px-8 md:px-20 py-10">
+        <div className="grid md:grid-cols-4 gap-6">
 
-        <h3 className="text-3xl font-bold mb-10 text-center">
-          Everything you need to learn STEM
-        </h3>
+          <Stat value="24/7" label="AI Tutor" />
+          <Stat value="∞" label="Practice Questions" />
+          <Stat value="AI" label="Answer Evaluation" />
+          <Stat value="STEM" label="Focused Learning" />
+
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section
+        id="features"
+        className="relative z-10 px-8 md:px-20 py-24"
+      >
+        <h2 className="text-4xl font-bold text-center mb-4">
+          Built for Modern STEM Education
+        </h2>
+
+        <p className="text-center text-gray-400 max-w-2xl mx-auto mb-14">
+          Everything needed to learn, practice, evaluate,
+          and improve in one platform.
+        </p>
 
         <div className="grid md:grid-cols-3 gap-6">
 
           <Feature
             icon={<Brain />}
             title="AI Tutor"
-            desc="Structured explanations based on beginner, intermediate, and advanced levels."
+            desc="Deep explanations with clean formatting, examples, and structured lessons."
           />
 
           <Feature
             icon={<BookOpen />}
             title="Smart Lessons"
-            desc="Turn any topic into clean, structured learning notes instantly."
+            desc="Generate organized learning material from any STEM topic instantly."
           />
 
           <Feature
-            icon={<MessageSquare />}
-            title="Interactive Learning"
-            desc="Ask questions, generate quizzes, and test yourself instantly."
+            icon={<ClipboardCheck />}
+            title="Interactive Quizzes"
+            desc="Practice with MCQs and short-answer questions generated from lessons."
           />
 
           <Feature
-            icon={<Zap />}
-            title="Fast Responses"
-            desc="Optimized AI prompts for quick and high-quality answers."
+            icon={<GraduationCap />}
+            title="Exam Preparation"
+            desc="Generate realistic exam sets with mixed difficulty questions."
           />
 
           <Feature
-            icon={<Layout />}
-            title="Clean UI"
-            desc="Minimal, distraction-free learning experience."
+            icon={<BarChart3 />}
+            title="AI Evaluation"
+            desc="Receive instant grading and feedback on your answers."
           />
 
           <Feature
-            icon={<Sparkles />}
-            title="Adaptive Modes"
-            desc="Switch between Learn, Quiz, and Exam modes anytime."
+            icon={<ShieldCheck />}
+            title="Focused Learning"
+            desc="No distractions. Just learning, testing, and improvement."
           />
-
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="relative z-10 px-8 md:px-20 py-20">
+      {/* PROCESS */}
+      <section className="relative z-10 px-8 md:px-20 py-24">
 
-        <h3 className="text-3xl font-bold text-center mb-10">
-          How it works
-        </h3>
+        <h2 className="text-4xl font-bold text-center mb-14">
+          How STEMFlow Works
+        </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
 
-          <Step num="1" title="Enter Topic" />
-          <Step num="2" title="AI Generates Lesson" />
-          <Step num="3" title="Learn & Test Yourself" />
+          <Step
+            num="01"
+            title="Enter Topic"
+            desc="Ask about any STEM concept."
+          />
+
+          <Step
+            num="02"
+            title="Learn"
+            desc="Receive structured AI explanations."
+          />
+
+          <Step
+            num="03"
+            title="Practice"
+            desc="Generate quizzes and exams."
+          />
+
+          <Step
+            num="04"
+            title="Improve"
+            desc="Get AI evaluation and feedback."
+          />
 
         </div>
       </section>
 
       {/* CTA */}
-      <section className="relative z-10 text-center py-20">
+      <section className="relative z-10 py-24 text-center px-8">
 
-        <h2 className="text-4xl font-bold">
-          Start learning smarter today
+        <h2 className="text-5xl font-bold">
+          Ready to Master STEM?
         </h2>
 
-        <p className="mt-4 text-gray-400">
-          Join the STEMFlow community and unlock your learning potential.
+        <p className="mt-6 text-gray-400 max-w-2xl mx-auto">
+          Learn concepts faster, test yourself continuously,
+          and improve through AI-powered evaluation.
         </p>
 
-        <a
-          href="/chat"
-          className="inline-block mt-8 px-8 py-4 bg-purple-600 rounded-xl hover:bg-purple-500 transition"
+        <Link
+          to="/chat"
+          className="inline-flex items-center gap-2 mt-10 px-8 py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 transition"
         >
-          Launch App
-        </a>
+          Launch STEMFlow
+          <ArrowRight size={18} />
+        </Link>
 
       </section>
-
     </div>
   );
 }
@@ -172,18 +234,49 @@ export default function Landing() {
 function Feature({ icon, title, desc }) {
   return (
     <div className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition">
-      <div className="text-purple-400 mb-3">{icon}</div>
-      <h4 className="font-semibold mb-2">{title}</h4>
-      <p className="text-sm text-gray-400">{desc}</p>
+      <div className="text-purple-400 mb-4">
+        {icon}
+      </div>
+
+      <h3 className="font-semibold text-lg mb-2">
+        {title}
+      </h3>
+
+      <p className="text-gray-400 text-sm">
+        {desc}
+      </p>
     </div>
   );
 }
 
-function Step({ num, title }) {
+function Step({ num, title, desc }) {
   return (
-    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center">
-      <div className="text-purple-400 text-2xl font-bold">{num}</div>
-      <div className="mt-2 font-medium">{title}</div>
+    <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+      <div className="text-purple-400 text-2xl font-bold">
+        {num}
+      </div>
+
+      <h3 className="mt-4 font-semibold">
+        {title}
+      </h3>
+
+      <p className="mt-2 text-sm text-gray-400">
+        {desc}
+      </p>
+    </div>
+  );
+}
+
+function Stat({ value, label }) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+      <div className="text-3xl font-bold text-purple-400">
+        {value}
+      </div>
+
+      <div className="text-gray-400 mt-2">
+        {label}
+      </div>
     </div>
   );
 }

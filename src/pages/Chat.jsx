@@ -19,8 +19,11 @@ function Chat() {
     const [quizData, setQuizData] =
         useState(null);
 
+    const [examData, setExamData] = useState(null);
     const [answers, setAnswers] =
         useState({});
+    const [feedback, setFeedback] =
+        useState([]);
 
     const [score, setScore] =
         useState(null);
@@ -104,25 +107,45 @@ function Chat() {
         setLoading(false);
     };
 
-    const gradeQuiz = () => {
-        let correct = 0;
+    const gradeAssessment = async () => {
+        const assessment =
+            view === "quiz"
+                ? quizData
+                : examData;
 
-        quizData.questions.forEach((q, index) => {
-            const userAnswer = answers[index];
+        if (!assessment) return;
 
-            if (!userAnswer) return;
+        setLoading(true);
 
-            if (
-                userAnswer.toLowerCase().trim() ===
-                q.answer.toLowerCase().trim()
-            ) {
-                correct++;
-            }
-        });
+        try {
+            const response = await fetch(
+                "/api/grade",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
+                    body: JSON.stringify({
+                        assessment,
+                        answers,
+                    }),
+                }
+            );
 
-        setScore(
-            `${correct}/${quizData.questions.length}`
-        );
+            const data =
+                await response.json();
+
+            setScore(data.reply.score);
+
+            setFeedback(
+                data.reply.feedback || []
+            );
+        } catch (err) {
+            console.error(err);
+        }
+
+        setLoading(false);
     };
 
     const generateQuiz = async () => {
@@ -183,8 +206,7 @@ function Chat() {
             if (!data.reply || !data.reply.questions) {
                 throw new Error("Invalid exam format");
             }
-
-            setQuizData(data.reply);
+            setExamData(data.reply);
             setView("exam");
 
         } catch (err) {
@@ -195,26 +217,12 @@ function Chat() {
         setLoading(false);
     };
 
-    const gradeExam = () => {
-        let correct = 0;
 
-        quizData.questions.forEach((q, index) => {
-            const userAnswer = answers[index];
-
-            if (!userAnswer) return;
-
-            if (q.answer &&
-                userAnswer.toLowerCase().trim() === q.answer.toLowerCase().trim()
-            ) {
-                correct++;
-            }
-        });
-
-        setScore(`${correct}/${quizData.questions.length}`);
-    };
+    const normalize = (str = "") =>
+        str.toString().toLowerCase().trim();
 
     return (
-        <div className="h-screen bg-[#0B0F19] text-white flex overflow-hidden">
+        <div className="h-screen w-full overflow-hidden bg-[#0B0F19] text-white flex flex-col md:flex-row">
             {/* SIDEBAR */}
 
             <AnimatePresence>
@@ -287,8 +295,7 @@ function Chat() {
                     <>
                         <div
                             ref={chatRef}
-                            className="flex-1 overflow-y-auto px-4 md:px-10 py-8"
-                        >
+                            className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-10 py-8" >
                             <div className="max-w-4xl mx-auto space-y-10">
                                 {messages.map((msg, index) => (
                                     <motion.div
@@ -401,6 +408,8 @@ ${lastLesson}
     resize-none
     px-4
     py-4
+    sticky 
+    bottom-0
     rounded-2xl
     bg-transparent
     outline-none
@@ -429,6 +438,18 @@ ${lastLesson}
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="max-w-4xl mx-auto space-y-6">
 
+                            <button
+                                onClick={() => {
+                                    setView("chat");
+                                    setQuizData(null);
+                                    setAnswers({});
+                                    setScore(null);
+                                }}
+                                className="mb-4 text-sm text-white/60 hover:text-white"
+                            >
+                                ← Back to Chat
+                            </button>
+
                             <h1 className="text-3xl font-bold">
                                 {quizData.title}
                             </h1>
@@ -448,10 +469,11 @@ ${lastLesson}
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
+                                                checked={answers[index] === option}
                                                 onChange={() =>
-                                                    setAnswers(prev => ({
+                                                    setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: opt
+                                                        [index]: option,
                                                     }))
                                                 }
                                             />
@@ -475,7 +497,7 @@ ${lastLesson}
                             ))}
 
                             <button
-                                onClick={gradeQuiz}
+                                onClick={gradeAssessment}
                                 className="px-6 py-3 bg-purple-600 rounded-xl"
                             >
                                 Submit Quiz
@@ -484,16 +506,64 @@ ${lastLesson}
                             {score && (
                                 <p className="text-xl font-bold">Score: {score}</p>
                             )}
+
+                            {feedback.length > 0 && (
+                                <div className="space-y-4 mt-6">
+
+                                    <h3 className="text-xl font-semibold">
+                                        AI Feedback
+                                    </h3>
+
+                                    {feedback.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="
+        bg-white/5
+        border border-white/10
+        rounded-xl
+        p-4
+      "
+                                        >
+                                            <p className="font-medium">
+                                                {item.question}
+                                            </p>
+
+                                            <p className="mt-2">
+                                                Result:
+                                                <span className="ml-2 font-semibold">
+                                                    {item.result}
+                                                </span>
+                                            </p>
+
+                                            <p className="text-white/70 mt-2">
+                                                {item.explanation}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
 
                 {/* EXAM VIEW */}
 
-                {view === "exam" && quizData && (
+                {view === "exam" && examData && (
                     <div className="flex-1 overflow-y-auto p-6">
 
                         <div className="max-w-4xl mx-auto space-y-6">
+
+                            <button
+                                onClick={() => {
+                                    setView("chat");
+                                    setQuizData(null);
+                                    setAnswers({});
+                                    setScore(null);
+                                }}
+                                className="mb-4 text-sm text-white/60 hover:text-white"
+                            >
+                                ← Back to Chat
+                            </button>
 
                             <h1 className="text-3xl font-bold">
                                 {quizData.title}
@@ -514,10 +584,11 @@ ${lastLesson}
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
+                                                checked={answers[index] === option}
                                                 onChange={() =>
-                                                    setAnswers(prev => ({
+                                                    setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: opt
+                                                        [index]: option,
                                                     }))
                                                 }
                                             />
@@ -541,12 +612,11 @@ ${lastLesson}
                             ))}
 
                             <button
-                                onClick={gradeExam}
+                                onClick={gradeAssessment}
                                 className="px-6 py-3 bg-green-600 rounded-xl"
                             >
                                 Submit Exam
                             </button>
-
                         </div>
                     </div>
                 )}

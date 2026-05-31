@@ -53,5 +53,9 @@ body {
   animation: pulseSoft 1.2s infinite;
 }
 
+.break-words {
+  word-break: break-word;
+}
+
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
