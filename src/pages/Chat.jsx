@@ -28,6 +28,8 @@ function Chat() {
     const [score, setScore] =
         useState(null);
 
+    const [grading, setGrading] = useState(false);
+
     const textareaRef = useRef(null);
 
     useEffect(() => {
@@ -73,7 +75,12 @@ function Chat() {
             content: finalMessage,
         };
 
-        setMessages((prev) => [...prev, userMessage]);
+        const updatedMessages = [
+            ...messages,
+            userMessage,
+        ];
+
+        setMessages(updatedMessages);
 
         setInput("");
 
@@ -87,6 +94,7 @@ function Chat() {
                 },
                 body: JSON.stringify({
                     message: finalMessage,
+                    messages: updatedMessages,
                 }),
             });
 
@@ -102,9 +110,10 @@ function Chat() {
             setLastLesson(data.reply);
         } catch (error) {
             console.error(error);
+        } finally {
+            setLoading(false);
         }
 
-        setLoading(false);
     };
 
     const gradeAssessment = async () => {
@@ -115,7 +124,20 @@ function Chat() {
 
         if (!assessment) return;
 
+        const totalQuestions =
+            assessment.questions.length;
+
+        if (
+            Object.keys(answers).length <
+            totalQuestions
+        ) {
+            alert("Answer all questions first.");
+            return;
+        }
+
         setLoading(true);
+        setGrading(true);
+
 
         try {
             const response = await fetch(
@@ -143,9 +165,11 @@ function Chat() {
             );
         } catch (err) {
             console.error(err);
+        } finally {
+            setLoading(false);
+            setGrading(false);
         }
 
-        setLoading(false);
     };
 
     const generateQuiz = async () => {
@@ -175,18 +199,17 @@ function Chat() {
 
             setAnswers({});
             setFeedback([]);
-            setsetAnswers({});
-            setFeedback([]);
-            setScore(null); Score(null);
+            setScore(null);
             setQuizData(data.reply);
             setView("quiz");
 
         } catch (err) {
             console.error(err);
             alert("Failed to generate quiz");
+        } finally {
+            setLoading(false);
         }
 
-        setLoading(false);
     };
 
     const generateExam = async () => {
@@ -222,14 +245,11 @@ function Chat() {
         } catch (err) {
             console.error(err);
             alert("Failed to generate exam");
+        } finally {
+            setLoading(false);
         }
 
-        setLoading(false);
     };
-
-
-    const normalize = (str = "") =>
-        str.toString().toLowerCase().trim();
 
     return (
         <div className="h-screen w-full overflow-hidden bg-[#0B0F19] text-white flex flex-col md:flex-row">
@@ -470,19 +490,19 @@ max-h-[200px]
                                         {index + 1}. {q.question}
                                     </p>
 
-                                    {q.type === "mcq" && q.options?.map((opt, index) => (
-                                        <label
+                                    {q.type === "mcq" && q.options?.map((opt, optIndex) => (
+                                        <label key={optIndex}
                                             className={`block p-2 rounded cursor-pointer
-    ${answers[index] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
+    ${answers[`q-${index}`] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
                                         >
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
-                                                checked={answers[index] === opt}
+                                                checked={answers[`q-${index}`] === opt}
                                                 onChange={() =>
                                                     setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: opt,
+                                                        [`q-${index}`]: opt,
                                                     }))
                                                 }
                                             />
@@ -491,7 +511,7 @@ max-h-[200px]
                                     ))}
 
                                     {q.type !== "mcq" && (
-                                        <input
+                                        <input value={answers[index] || ""}
                                             className="w-full mt-3 p-3 bg-black/30 rounded"
                                             onChange={(e) =>
                                                 setAnswers(prev => ({
@@ -504,12 +524,17 @@ max-h-[200px]
 
                                 </div>
                             ))}
-
                             <button
+                                disabled={grading}
                                 onClick={gradeAssessment}
-                                className="px-6 py-3 bg-purple-600 rounded-xl"
+                                className="
+  px-6 py-3
+  bg-green-600
+  rounded-xl
+  disabled:opacity-50
+  "
                             >
-                                Submit Quiz
+                                {grading ? "Evaluating..." : "Submit Quiz"}
                             </button>
 
                             {score && (
@@ -592,19 +617,19 @@ max-h-[200px]
                                         {index + 1}. {q.question}
                                     </p>
 
-                                    {q.type === "mcq" && q.options?.map((opt, index) => (
-                                        <label
+                                    {q.type === "mcq" && q.options?.map((opt, optIndex) => (
+                                        <label key={optIndex}
                                             className={`block p-2 rounded cursor-pointer
-    ${answers[index] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
+    ${answers[`q-${index}`] === opt ? "bg-white/20" : "hover:bg-white/10"}`}
                                         >
                                             <input
                                                 type="radio"
                                                 name={`q-${index}`}
-                                                checked={answers[index] === opt}
+                                                checked={answers[`q-${index}`] === opt}
                                                 onChange={() =>
                                                     setAnswers((prev) => ({
                                                         ...prev,
-                                                        [index]: opt,
+                                                        [`q-${index}`]: opt,
                                                     }))
                                                 }
                                             />
@@ -614,6 +639,7 @@ max-h-[200px]
 
                                     {q.type !== "mcq" && (
                                         <textarea
+                                            value={answers[index] || ""}
                                             className="w-full mt-3 p-3 bg-black/30 rounded"
                                             onChange={(e) =>
                                                 setAnswers(prev => ({
@@ -628,10 +654,16 @@ max-h-[200px]
                             ))}
 
                             <button
+                                disabled={grading}
                                 onClick={gradeAssessment}
-                                className="px-6 py-3 bg-green-600 rounded-xl"
+                                className="
+  px-6 py-3
+  bg-green-600
+  rounded-xl
+  disabled:opacity-50
+  "
                             >
-                                Submit Exam
+                                {grading ? "Evaluating..." : "Submit Exam"}
                             </button>
 
 

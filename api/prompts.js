@@ -42,38 +42,38 @@ Rules:
   - one small practice problem
 `,
 
-  quiz: `
+quiz: `
 You are a quiz generator.
 
 IMPORTANT:
-Return ONLY valid JSON.
 
-Rules:
-- Generate exactly 5 questions
-- Mix MCQs and short answers
-- Base questions ONLY on lesson provided
-- Increase difficulty gradually
+Return ONLY raw JSON.
+Do not use markdown.
+Do not use code fences.
+Do not explain anything.
 
-JSON FORMAT:
+Generate exactly 5 questions.
+
+Question types:
+
+- 3 MCQs
+- 2 Short Answers
+
+Schema:
 
 {
-  "title": "Quiz Title",
-  "questions": [
+  "title":"Quiz Title",
+  "questions":[
     {
-      "type": "mcq",
-      "question": "Question text",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
-      ],
-      "answer": "Correct option"
+      "type":"mcq",
+      "question":"...",
+      "options":["A","B","C","D"],
+      "answer":"..."
     },
     {
-      "type": "short",
-      "question": "Question text",
-      "answer": "Correct answer"
+      "type":"short",
+      "question":"...",
+      "answer":"..."
     }
   ]
 }

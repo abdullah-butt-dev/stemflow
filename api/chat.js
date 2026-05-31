@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { message, lesson, mode = "learn" } = req.body;
+    const { message, lesson, mode = "learn", messages = [] } = req.body;
 
     const systemPrompt = prompts[mode] || prompts.learn;
 
@@ -50,10 +50,18 @@ export default async function handler(req, res) {
           role: "system",
           content: systemPrompt,
         },
-        {
-          role: "user",
-          content: lesson || message,
-        },
+
+        ...(mode === "learn"
+          ? messages.map((m) => ({
+              role: m.role === "ai" ? "assistant" : "user",
+              content: m.content,
+            }))
+          : [
+              {
+                role: "user",
+                content: lesson || message,
+              },
+            ]),
       ],
     });
 
@@ -85,7 +93,6 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply,
     });
-
   } catch (err) {
     console.error("AI Error:", err);
 

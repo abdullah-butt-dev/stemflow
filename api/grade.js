@@ -10,6 +10,7 @@ function extractJSON(text) {
     return JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
+
     if (!match) return null;
 
     try {
@@ -47,11 +48,10 @@ Rules:
 Return ONLY valid JSON.
 
 {
-  "score":"8/10",
   "feedback":[
     {
       "question":"...",
-      "result":"Incorrect",
+      "result":"Correct",
       "correctAnswer":"...",
       "explanation":"..."
     }
@@ -72,7 +72,7 @@ ${JSON.stringify(answers)}
       ],
     });
 
-    const raw = completion.choices[0].message.content;
+    const raw = completion.choices?.[0]?.message?.content || "";
 
     const parsed = extractJSON(raw);
 
@@ -91,8 +91,27 @@ ${JSON.stringify(answers)}
       });
     }
 
+    const feedback = parsed.feedback || [];
+
+    let points = 0;
+
+    feedback.forEach((item) => {
+      const result = item.result?.toLowerCase() || "";
+
+      if (result.includes("partially")) {
+        points += 0.5;
+      } else if (result === "correct") {
+        points += 1;
+      }
+    });
+
+    const score = `${points}/${feedback.length}`;
+
     return res.status(200).json({
-      reply: parsed,
+      reply: {
+        score,
+        feedback,
+      },
     });
   } catch (err) {
     console.error(err);
