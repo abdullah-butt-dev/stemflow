@@ -252,7 +252,7 @@ function Chat() {
     };
 
     return (
-        <div className="h-[100dvh] w-full overflow-hidden bg-[#0B0F19] text-white flex flex-col md:flex-row">            {/* SIDEBAR */}
+        <div className="h-[100dvh] w-full bg-[#0B0F19] text-white flex flex-col md:flex-row">            {/* SIDEBAR */}
 
             <AnimatePresence>
                 {sidebarOpen && (
@@ -302,7 +302,7 @@ function Chat() {
 
             {/* MAIN */}
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col">
                 {/* TOPBAR */}
 
                 <div
@@ -324,8 +324,9 @@ function Chat() {
                     <>
                         <div
                             ref={chatRef}
-                            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 md:px-10 py-8"
-                        >      <div className="max-w-4xl mx-auto space-y-10">
+                            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden touch-pan-y px-4 md:px-10 py-8"
+                        >
+                            <div className="max-w-4xl mx-auto space-y-10">
                                 {messages.map((msg, index) => (
                                     <motion.div
                                         key={index}
