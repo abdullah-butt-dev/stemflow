@@ -54,22 +54,22 @@ Built with React, Next.js API routes, OpenRouter, and DeepSeek AI.
 
 ### Chat Interface
 
-![Chat Screenshot](./src/assets/screenshots/chat.png)
+![Chat Screenshot](./screenshots/chat.png)
 
 
 ### Quiz Generation
 
-![Quiz Screenshot](./src/assets/screenshots/quiz.png)
+![Quiz Screenshot](./screenshots/quiz.png)
 
 
 ### Exam Generation
 
-![Exam Screenshot](./src/assets/screenshots/exam.png)
+![Exam Screenshot](./screenshots/exam.png)
 
 
 ### AI Feedback & Grading
 
-![Feedback Screenshot](./src/assets/screenshots/feedback.png)
+![Feedback Screenshot](./screenshots/feedback.png)
 
 
 ## 🛠️ Tech Stack
